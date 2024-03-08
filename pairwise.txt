@@ -1,0 +1,134 @@
+from Bio import SeqIO, Entrez
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+from Bio.Align import PairwiseAligner
+
+
+def get_sequence_information(
+    sequence,
+    seq_id="UserInput",
+    seq_name="UserSeq",
+    description="User-provided DNA sequence",
+    annotations=None,
+):
+    if annotations is None:
+        annotations = {"Source": "User"}
+
+    seq_object = Seq(sequence)
+
+    print("Sequence Information:")
+    print(f"Sequence: {sequence}")
+    print(f"ID: {seq_id}")
+    print(f"Name: {seq_name}")
+    print(f"Description: {description}")
+    print(f"Annotations: {annotations}")
+
+    return seq_object
+
+
+# def pairwise_alignment(seq1, seq2):
+#     aligner = PairwiseAligner()
+#     alignments = aligner.align(seq1, seq2)
+#     best_alignment = max(alignments, key=lambda x: x.score)
+#     aligned_seq1 = best_alignment.aligned[0]
+#     aligned_seq2 = best_alignment.aligned[1]
+
+#     print(f"\nPairwise Alignment:")
+#     print(f"Alignment Score: {best_alignment.score}")
+#     print("Aligned Sequence 1:", aligned_seq1)
+#     print("Aligned Sequence 2:", aligned_seq2)
+
+
+def pairwise_alignment(seq1, seq2):
+    aligner = PairwiseAligner()
+    alignments = aligner.align(seq1, seq2)
+    best_alignment = max(alignments, key=lambda x: x.score)
+    aligned_seq1 = best_alignment.aligned[0]
+    aligned_seq2 = best_alignment.aligned[1]
+
+    print("\nPairwise Alignment:")
+    print("Alignment Score:", best_alignment.score)
+    print(f"Sequence 1: {aligned_seq1}")
+    print(f"Sequence 2: {aligned_seq2}")
+
+    # Display alignment in a tabular format
+    print("\nAlignment Table:")
+    print("Position\tSequence 1\tSequence 2")
+    for i in range(len(aligned_seq1)):
+        print(f"{i+1}\t\t{aligned_seq1[i]}\t\t{aligned_seq2[i]}")
+
+
+def calculate_gc_content(sequence):
+    gc_count = sequence.count("G") + sequence.count("C")
+    gc_content = (gc_count / len(sequence)) * 100
+    print("\nGC Content:", gc_content)
+
+
+# def find_motifs(sequence):
+#     seq = Seq(sequence)
+#     motif = motifs.create([Seq("ATG")])
+#     instances = motif.instances.search(seq)
+#     print("\nMotif Instances:", instances)
+
+
+def find_orfs(sequence):
+    start_codon = "ATG"
+    stop_codons = ["TAA", "TAG", "TGA"]
+
+    orfs = []
+    for i in range(0, len(sequence), 3):
+        codon = sequence[i : i + 3]
+        if codon == start_codon:
+            orf = ""
+            for j in range(i, len(sequence), 3):
+                codon = sequence[j : j + 3]
+                if codon in stop_codons:
+                    orfs.append(orf)
+                    break
+                else:
+                    orf += codon
+    print("\nOpen Reading Frames (ORFs):", orfs)
+
+
+def fetch_sequence_from_ncbi(accession):
+    Entrez.email = "lepil65839@bitofee.com"  # Set your email address
+    handle = Entrez.efetch(db="nucleotide", id=accession, rettype="gb", retmode="text")
+    record = SeqIO.read(handle, "genbank")
+    handle.close()
+    print("\nSequence Information from NCBI:")
+    print(record)
+
+
+# Main function
+def main():
+    # Example 1: Get user input for the sequence
+    user_sequence = input("Enter the DNA sequence: ")
+
+    # Example 2: Get sequence information
+    sequence_info = get_sequence_information(user_sequence)
+
+    # Example 3: Perform pairwise alignment
+    seq1 = Seq(user_sequence)
+    seq2 = Seq(
+        input("Enter another seq:")
+    )  # Provide another sequence for demonstration
+    pairwise_alignment(seq1, seq2)
+
+    # Example 4: Calculate GC content
+    calculate_gc_content(user_sequence)
+
+    # Example 5: Find motifs
+    # find_motifs(user_sequence)
+
+    # Example 6: Find ORFs
+    find_orfs(user_sequence)
+
+    # Example 7: Retrieve sequence information from NCBI
+    accession_number = (
+        "AF201473.1"  # Provide a valid accession number for demonstration
+    )
+    fetch_sequence_from_ncbi(accession_number)
+
+
+if __name__ == "__main__":
+    main()
